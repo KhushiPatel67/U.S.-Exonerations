@@ -1,0 +1,154 @@
+---
+title: "Project title"
+subtitle: "Appendix to report"
+format: html
+editor: visual
+execute:
+  echo: true
+---
+
+```{r}
+#| label: load-packages
+#| cache: false
+#| warning: false
+
+library(tidyverse)
+library(janitor)
+library(tidymodels)
+library(parsnip)
+library(infer)
+library(tidytext)
+```
+
+# Data cleaning
+
+First, we request and download the raw .csv file from the National Registry of Exonerations [webpage](https://www.law.umich.edu/special/exoneration/Pages/about.aspx).
+
+Next, we load the csv file into a data frame. We name it `us_exonerations`.
+
+```{r}
+#| label: data-load
+#| cache: false
+# load data into tibble
+us_exonerations <- read_csv("data/us_exonerations.csv")
+```
+The dataset is already generally clean and tidy, with each row representing a exoneree and the various details of their case. However, there are some improvements to be made. First is the column names, which do not follow convention and include several strange characters in them. We use the `janitor` function `clean_names` to give the names a proper format.
+
+We filter the dataframe by the five most commonly appearing race categories: Asian, Hispanic, Black, White, and Native American. The other race categories were either not well-defined (e.g. Other, unknown, etc.) or contained only 1 observation.
+
+We also create a new column named `diff_conv_ex` that represents the number of years between when an exoneree was convicted and when they were exonerated. This gives us an estimate of how long they spent in prison, on probation, or, more generally, faced the consequences of a crime they did not commit. We also add a column `sentence_severity`, which marks whether or not the exoneree was sentenced to a severe punishment (death, life in prison, or life without parole). This variable serves as a binary outcome variable for our logistic regression. We create a similar field `sentence_severity_3`, which further stratifies the exoneree's sentence into 3 categories (Life in prison/death, some years in prison, probation/no sentence). This variable will serve as a predictor variable in our linear regression model. 
+
+We relevel the race column so that White exonerees are the baseline dummy variable in our models. This allows us to more easily answer questions relating to difference between White exonerees and non-White exonerees. 
+
+We also only select the columns that we use in the analysis in one way or another in the final report.
+
+```{r}
+#| label: data-load-clean
+#| cache: false
+#| warning: false
+
+most_severe <- c("Death", "Life without parole", "Life")
+
+race_5 <- c('Asian', 'Hispanic', 'Black', 'White', 'Native American')
+
+b1 <- c("Murder",
+"Manslaughter",
+"Attempted Murder",
+"Accessory to Murder",
+"Sexual Assault")
+
+b2 <- c("Child Sex Abuse",
+"Child Abuse",
+"Robbery",
+"Assault",
+"Arson")
+
+b3 <- c("Kidnapping",
+"Terrorism",
+"Supporting Terrorism",
+"Attempt, Violent",
+"Other Violent Felony")
+
+b4 <- c("Burglary/Unlawful Entry",
+"Theft",
+"Forgery",
+"Possession of Stolen Property",
+"Destruction of Property")
+
+b5 <- c("Drug Possession or Sale",
+"Gun Possession or Sale",
+"Other Weapon Possession or Sale",
+"Sex Offender Registration",
+"Tax Evasion/Fraud")
+
+b6 <- c("Immigration",
+"Fraud",
+"Bribery",
+"Perjury",
+"Official Misconduct")
+
+b7 <- c("Traffic Offense",
+"Conspiracy",
+"Solicitation",
+"Obstruction of Justice",
+"Failure to Pay Child Support")
+
+b8 <- c("Dependent Adult Abuse",
+"Attempt, Nonviolent",
+"Other Nonviolent Felony",
+"Military Justice Offense",
+"Menacing")
+
+b9 <- c("Stalking",
+"Harassment",
+"Threats",
+"Filing a False Report",
+"Other")
+
+# turn tags into columns, mark 1 if tag present, 0 if not
+us_exonerations <- us_exonerations |>
+  clean_names() |>
+  mutate(
+    # calculate the number of years between conviction and exoneration
+    diff_conv_ex = exonerated - convicted,
+    # column that designates whether or not they had the highest severity punishment
+    sentence_severity = if_else(sentence %in% most_severe, "Yes", "No"),
+    sentence_severity = factor(sentence_severity, levels = c("Yes", "No"))
+  ) |>
+  mutate(
+    # bucket worst crime displayed by severity
+     wc_bucket = case_when(
+      worst_crime_display %in% b1 ~ "b1",
+      worst_crime_display %in% b2 ~ "b2",
+      worst_crime_display %in% b3 ~ "b3",
+      worst_crime_display %in% b4 ~ "b4",
+      worst_crime_display %in% b5 ~ "b5",
+      worst_crime_display %in% b6 ~ "b6",
+      worst_crime_display %in% b7 ~ "b7",
+      worst_crime_display %in% b8 ~ "b8",
+      worst_crime_display %in% b9 ~ "b9",
+      .default = NA
+    ),
+    # additional severity stratification when using severity as predictor var
+    sentence_severity_3 = case_when(
+      sentence %in% most_severe ~ "Life in prison/death",
+      str_detect(sentence, "[0-9]+") ~ "Some prison sentence",
+      .default = "Probation/not sentenced/unknown"
+    ),
+      race = fct_relevel(race, levels = c("White", "Black", "Hispanic", "Native American", "Asian"))
+  ) |>
+  select(race, sentence, sentence_severity, sentence_severity_3, worst_crime_display, sex, wc_bucket, diff_conv_ex) |>
+  filter(race %in% race_5)
+  
+```
+
+```{r}
+#| label: write-tidy-csv
+
+us_exonerations |>
+  write_csv("data/tidy_us_exonerations.csv")
+```
+
+We write the tidy dataframe to `tidy_us_exonerations.csv` in the data folder. 
+
+# Other appendicies (as necessary)

@@ -1,0 +1,13 @@
+---
+title: "About"
+format: html
+editor: visual
+---
+
+This project was developed by marvelous-hitmontop For [INFO 2950: Introduction to Data Science](https://info2950.infosci.cornell.edu) at Cornell University. The team is comprised of the following team members.
+
+-   Derrick Chia: Sophomore, Infosci
+-   Cynthia Lei: Sophomore, Infosci
+-   Alexa Prague: Sophomore, Information Science
+-   Khushi Patel: Sophomore, Infosci
+-   Caleb Chin: Sopomore, Infosci
