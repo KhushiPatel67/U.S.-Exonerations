@@ -1,0 +1,8 @@
+---
+title: "Marvelous Hitmontop"
+subtitle: "INFO 2950 Project"
+format: html
+editor: visual
+---
+
+In this report, we investigate how race affects the severity of sentence and length of time between conviction and exoneration for U.S. exonerees. We use data from the National Registry of Exonerations to develop logistic and linear regression models to explore the differences in outcomes between minority and non-minority exonerees. We find that Hispanic exonerees have a significantly different probability of a severe sentence than White exonerees and generate a confidence interval that suggests the true proportion of Hispanic exonerees that receive a severe sentence is lower than White exonerees. We also find that Black exonerees appear to spend more time between conviction and exoneration than White exonerees. Our findings shed a light on the complex factors that influence exoneree outcomes in the United States and suggests paths for future research.

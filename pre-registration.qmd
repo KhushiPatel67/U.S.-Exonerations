@@ -1,0 +1,32 @@
+---
+title: "Project title"
+subtitle: "Preregistration of analyses"
+format: html
+editor: visual
+execute:
+  echo: true
+---
+
+# Analysis #1
+
+## Question and explanation:
+
+In our first analysis, we will explore the relationship between the race of the exonerees and the severity of the sentence that they received. More specifically, we will ask, are minority exonerees more likely to get life in prison/death sentences than non-minority (White) exonerees? To conduct this analysis, we will create a logistic regression model which we will use to generate and visualize predicted probabilities of whether or not the sentence was a life in prison/death sentence based on the race of the exoneree. In addition, we will analyze whether or not race alone can be a good predictor of sentence severity.
+
+Although there are many factors that could contribute to the severity of the sentence of the exoneree (which will be examined in other analyses), we choose to highlight just race with this specific analysis to further explore its impact on the judicial system.
+
+## Hypothesis:
+
+We hypothesize that minorities (Black, Hispanic, Asian, and Native American) will be found more likely to receive life in prison/death sentences than White exonerees. However, we also hypothesize that race alone will be a generally poor predictor of the race of the exoneree.
+
+# Analysis #2
+
+## Questions and explanation:
+
+In our second analysis, we ask: how is the length of time between conviction and exoneration and the worst crime they were convicted of related to how many years the exoneree was sentenced to? To conduct this analysis, we will create a model to examine the relationship between these variables. First, we use a logistic regression model with a binary severity of sentence (whether or not the sentence was life in prison, death) as the dependent variable. Next, with the help of further data tidying, we will transform the sentence variable into a numerical one and create a linear regression model to show the relationship between the length of time between conviction and exoneration and the worst crime they were convicted of and the number of years they were sentenced to.
+
+This question is driven by an interest in analyzing the failings of the judicial system. Do false convictions for worse crimes still correlate to harsher sentences? In addition, are people with harsher sentences often left convicted for longer before being exonerated?
+
+## Hypothesis:
+
+We hypothesize that longer periods of time between convictions and exoneration will be associated with harsher sentences. We further hypothesize that exonerees that were convicted of worse crimes will also have harsher sentences.

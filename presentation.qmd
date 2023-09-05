@@ -1,0 +1,267 @@
+---
+title: Exonerations in the U.S.
+subtitle: Analyzing race, sentence severity, and time between conviction and exoneration
+author: Project Marvelous Hitmontop <br> Caleb Chin, Khushi Patel, Alexa Prague, Derrick Chia, Cynthia Lei
+date: May 5, 2023
+format:
+  revealjs:
+    theme: simple
+    smaller: true
+editor: visual
+execute:
+  echo: false
+  cache: true
+---
+
+## Topic and motivation
+
+```{r}
+#| label: load-packages
+#| execute:
+#|  echo: false
+
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+install.packages("gt")
+
+library(tidyverse)
+library(janitor)
+library(tidymodels)
+library(parsnip)
+library(infer)
+library(tidytext)
+library(gt)
+
+
+set.seed(123)
+```
+
+```{r}
+#| label: data-load-clean
+#| execute:
+#| echo: false
+
+
+us_exonerations <- read_csv("data/us_exonerations.csv")
+
+most_severe <- c("Death", "Life without parole", "Life")
+
+
+us_exonerations <- us_exonerations |>
+  clean_names() |>
+  rowwise() |>
+  mutate(
+    tags_vc = str_split(string = tags, pattern = ";#"),
+    ars = if_else("A" %in% tags_vc, 1, 0),
+    cdc = if_else("CDC" %in% tags_vc, 1, 0),
+    ciu = if_else("CIU" %in% tags_vc, 1, 0),
+    csh = if_else("CSH" %in% tags_vc, 1, 0),
+    cv = if_else("CV" %in% tags_vc, 1, 0),
+    fem = if_else("F" %in% tags_vc, 1, 0),
+    fed = if_else("FED" %in% tags_vc, 1, 0),
+    hom = if_else("H" %in% tags_vc, 1, 0),
+    ji = if_else("JI" %in% tags_vc, 1, 0),
+    m = if_else("M" %in% tags_vc, 1, 0),
+    nc = if_else("NC" %in% tags_vc, 1, 0),
+    p = if_else("P" %in% tags_vc, 1, 0),
+    ph = if_else("PH" %in% tags_vc, 1, 0),
+    sbs = if_else("SBS" %in% tags_vc, 1, 0),
+    sa = if_else("SA" %in% tags_vc, 1, 0)
+  ) |>
+  ungroup() |>
+  mutate(
+    dna = if_else(is.na(dna), 0, 1),
+    fc = if_else(is.na(fc), 0, 1),
+    mwid = if_else(is.na(mwid), 0, 1),
+    f_mfe = if_else(is.na(f_mfe), 0, 1),
+    p_fa = if_else(is.na(p_fa), 0, 1),
+    om = if_else(is.na(om), 0, 1),
+    ild = if_else(is.na(ild), 0, 1),
+
+    diff_conv_ex = exonerated - convicted,
+
+    sentence_severity = if_else(sentence %in% most_severe, "Yes", "No"),
+    sentence_severity = factor(sentence_severity, levels = c("Yes", "No"))
+  ) |>
+  select(-om_tags, -tags_vc, -list_addl_crimes_recode, -tags, -x)
+```
+
+-   The criminal justice system in the United States has been under scrutiny for its disproportionate impact on minority communities.
+
+-   We want to investigate:
+
+    -   how race affects the severity of the sentences exonerees receive
+
+    -   how length of time between conviction and exoneration, severity of crime, and sentence are related
+
+## Data introduction
+
+- Observations represent all known U.S. exonerees between 1989 and 2023.
+- Data was collected by The National Registry of Exonerations 
+- The data fields consist of exoneree information such as name, race, and sex as well as information about their exoneration.
+- Data has several subpopulations
+
+## Highlights from EDA
+
+::: {.r-stack}
+
+```{r}
+#| label: eda-summarystats
+#| execute:
+#| eval: TRUE
+#| echo: FALSE
+  
+# proportion of exonerees by race
+us_exonerations |>
+  group_by(race) |>
+  summarize(
+    num = n()
+  ) |>
+  ungroup() |>
+  mutate(
+    prop = num / sum(num)
+  ) |>
+  gt()
+
+
+```
+
+::: {.fragment fragment-index=2}
+
+```{r}
+#| label: eda-race-exoneration-years
+#| fig-height: 4
+
+# box plot to show median length between conviction and exoneration by race
+# for visualization purposes, we consider only 5 races, Asian, Hispanic, Black, White, and Native American
+race_5 <- c('Asian', 'Hispanic', 'Black', 'White', 'Native American')
+
+us_exonerations |>
+  filter(race %in% race_5) |>
+  ggplot(aes(x = race, y = diff_conv_ex, color = race)) +
+  geom_boxplot(show.legend = FALSE) +
+  scale_color_viridis_d() +
+  labs(
+    title = "Median years between conviction and exoneration by race",
+    subtitle = "U.S. Exonerees, 1989 to 2023",
+    x = "Exoneree Race",
+    y = "Years between conviction and exoneration",
+    caption = "Source: The National Registry of Exonerations"
+  ) +
+  theme_minimal()
+
+```
+:::
+:::
+
+
+Asian, Black, White, Hispanic, and Native American exonerees appear the most in the data set
+
+::: {.fragment fragment-index=2}
+Native American and Black exonerees often spend longer between conviction and exoneration than exonerees of other races.
+:::
+
+
+## Predicting sentence severity with race
+
+::: r-stretch
+```{r}
+#| label: logi-reg-race-severity
+
+race_5 <- c('Asian', 'Hispanic', 'Black', 'White', 'Native American')
+
+fil_race5_exons <- us_exonerations |>
+  filter(race %in% race_5) |>
+  mutate(race = factor(race, levels = c("White", "Black", "Hispanic", "Asian", "Native American")))
+
+log_fit_race_sent <- logistic_reg() |>
+  fit(sentence_severity ~ race, data = fil_race5_exons)
+
+race_pred <- tibble(race = c("White", "Black", "Hispanic", "Native American", "Asian"))
+race_sent_predict <- bind_cols(race_pred, predict(log_fit_race_sent, new_data = race_pred, type="prob"))
+
+race_sent_predict |>
+  mutate(
+    race = factor(race),
+    race = fct_reorder(.f = race, .x = .pred_Yes)
+  ) |>
+  ggplot(aes(y = race, x = .pred_Yes, fill = race)) +
+  geom_col(orientation = "y", show.legend = FALSE) + 
+  expand_limits(x = c(0.0, 0.4)) +
+  scale_fill_viridis_d(option = "C") +
+  scale_x_continuous(labels=percent_format()) +
+  labs(
+    title = "Predicted Probability of Severe Sentence by Race",
+    subtitle = "For U.S. Exonerees from 1989-2023, using logistic regression model",
+    x = "Predicted probability of receiving death or life in prison sentence",
+    y = "Race",
+    caption = "Source: National Registry of Exonerations"
+  ) +
+  theme_minimal()
+
+```
+:::
+
+::: fragment
+Significance of results at 5% significance level: Hispanic Exonerees vs White Exonerees
+:::
+
+## Time falsely convicted, race, and sentence severity
+
+::: r-stretch
+```{r}
+#| label: lin-reg-conv-sentsev-race
+
+lin_fit_exons <- linear_reg() |>
+  fit(diff_conv_ex ~ sentence_severity + race, data = fil_race5_exons)
+
+val_race_sent <- expand(fil_race5_exons, race, sentence_severity)
+
+pred_race_sent <- bind_cols(val_race_sent, predict(lin_fit_exons, new_data = val_race_sent))
+
+pred_race_sent |>
+  mutate(
+    sentence_severity = as.factor(sentence_severity),
+    sentence_severity = recode(sentence_severity, "Yes" = "Death or Life in Prison", "No" = "Other Sentence"),
+    race = reorder_within(x = race, by = .pred, within = sentence_severity)
+    ) |>
+  ggplot(aes(x = race, y = .pred, fill = race)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(facets = vars(sentence_severity), scales = "free_x") +
+  scale_x_reordered() +
+  scale_fill_viridis_d(option = "C") +
+  labs(
+    title = "Predicting time falsely convicted with race and sentence severity",
+    subtitle = "For U.S. Exonerees (1989-2023), using linear regression model",
+    y = "Predicted number of years false convicted",
+    x = "Exoneree Race",
+    caption="Source: National Registry of Exonerees"
+    
+  ) +
+  theme_minimal()
+  
+
+```
+:::
+
+::: {.fragment}
+Significance of results at 5% significance level: Black Exonerees vs White Exonerees, Sentence Severity
+:::
+
+## Conclusions + future work
+
+- Hispanic exonerees have a stat. significant difference in predicted probabiliy of getting severe sentence than White exonerees
+- How about the rest of the exonerees?
+
+::: {.fragment}
+- Black exonerees have stat. significant difference compared to White exonerees in expected years between conviction and exoneration, holding sentence severity constant.
+- What does this imply?
+:::
+
+::: {.fragment}
+- Key Limitation: data only represents those who have already been found innocent, we cannot extrapolate to all falsely convicted people.
+:::
+
+::: {.fragment}
+- Future work: 
+  - Transforming sentence into numeric field to examine how sentence length (in years) is associated with race and/or other factors
+:::

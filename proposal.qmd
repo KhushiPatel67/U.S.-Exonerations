@@ -1,0 +1,166 @@
+---
+title: "Race and U.S. Exonerations"
+subtitle: "Proposal"
+format: html
+editor: visual
+---
+
+```{r}
+#| label: load-pkgs
+#| message: false
+
+library(tidyverse)
+library(skimr)
+```
+
+# Data 1
+
+## Introduction and data
+
+-   Identify the source of the data.
+
+    -   Source: NYC Open Data
+
+-   State when and how it was originally collected (by the original data curator, not necessarily how you found the data).
+
+    -   This dataset is updated everyday and it is collected by the Department of Health and Mental Hygiene.
+
+-   Write a brief description of the observations.
+
+    -   Each row represents a date of interest which is separated into three types: date of diagnosis, date of hospital admission, and date of death. This dataset represents citywide and borough-specific daily counts of COVID-19 confirmed cases and COVID-related hospitalizations and confirmed and probable deaths among New York City residents. Columns include number of cases on date of interest, hospitalized count, death count in different boroughs, etc.
+
+## Research question
+
+-   A well formulated research question. (You may include more than one research question if you want to receive feedback on different ideas for your project. However, one per data set is required.)
+    -   What is the trend between the date of interest and the number of cases, deaths, and hospitalizations on that date citywide?
+
+    -   What is the trend between the date of interest and the number of deaths for each borough?
+-   A description of the research topic along with a concise statement of your hypotheses on this topic.
+    -   The data collected will show the number of cases, deaths, and hospitalizations on a specific date citywide. I believe that there will be quite a few fluctuations as we know that COVID-19 had specific periods of major outbreaks.
+-   Identify the types of variables in your research question. Categorical? Quantitative?
+    -   Date: Categorical
+
+    -   Deaths: quantitative
+
+    -   Hospitalizations: quantitative
+
+    -   Cases: Quantitative
+
+    -   Borough: categorical 
+
+## Glimpse of data
+
+```{r}
+#| label: load-data-1
+
+COVID <- read_csv("data/COVID-19_Daily_Counts_of_Cases__Hospitalizations__and_Deaths.csv")
+
+skimr::skim(COVID)
+
+```
+
+# Data 2
+
+## Introduction and data
+
+-   Identify the source of the data.
+
+The source of the data is the Department of Health and Mental Hygiene (DOHMH).
+
+-   State when and how it was originally collected (by the original data curator, not necessarily how you found the data).
+
+The original data curators collected raw data through measurements in air quality and composition. It is then adjusted for weather and season and modeled based on the environmental factors and nearby emission sources.
+
+-   Write a brief description of the observations.
+
+The observations describe every NYC neighborhoods' metrics like outside air pollutants, health burdens, and air toxics.
+
+## Research question
+
+-   A well formulated research question. (You may include more than one research question if you want to receive feedback on different ideas for your project. However, one per data set is required.)
+    -   What neighborhoods of NYC have highest average levels of fine particulates?, does this show a correlation with the overall air quality?
+
+    -   Have the Ozone levels in my neighborhood gone down or up over the last few years?
+-   A description of the research topic along with a concise statement of your hypotheses on this topic.
+    -   This data shows air quality over time in NYC neighborhoods. We want to investigate how ozone and air quality has changed over time and if the particular things in the air have an affect on the overall air quality. We believe that a higher level of fine particulates mean a worse air quality and that ozone levels in general, have done down in the last few years.
+-   Identify the types of variables in your research question. Categorical? Quantitative?
+    -   The variables that want to be known in the research questions are categorical.
+        -   Name
+
+        -   Place
+
+        -   Time Period
+    -   Numerical
+        -   Date
+
+## Glimpse of data
+
+```{r}
+#| label: load-data-2
+
+# add code here
+Air_Qual <- read.csv("data/Air_Quality.csv")
+skimr::skim(Air_Qual)
+  
+```
+
+# Data 3
+
+## Introduction and data
+
+-   Identify the source of the data.
+
+    -   Source: The National Registry of Exonerations
+
+-   State when and how it was originally collected (by the original data curator, not necessarily how you found the data).
+
+    -   The Registry was founded in 2012 as a project of the Newkirk Center for Science and Society at the University of California Irvine, the University of Michigan Law School, and Michigan State University College of Law in conjunction with the Center on Wrongful Convictions at Northwestern University School of Law. Their research allowed them to collect data on every known exoneration in the United States since 1989. 
+
+-   Write a brief description of the observations.
+
+    -   Each observation represents one exonerated individual. The dataset includes their name, age, race, sex, and various details about the crime they were exonerated for, such as location, type of crime, years of conviction, whether or not DNA was used and more.
+
+## Research question
+
+-   A well formulated research question. (You may include more than one research question if you want to receive feedback on different ideas for your project. However, one per data set is required.)
+    -   How does DNA being collected impact how long they were in jail for?
+
+    -   Are there any differences in conviction and exoneration rates between races within different states?
+
+    -   How does the individual's characteristics impact how long they were wrongfully convicted for?\
+-   A description of the research topic along with a concise statement of your hypotheses on this topic.
+    -   The research topic is about every known exoneration in United States since 1989. It gives information about the sentence and the individual who was exonerated. We want to investigate how the individual's sentence impacts how long the individual was in jail for. We believe that the worse the sentence and the less DNA evidence on the scene, the longer the individual was wrongfully convicted and in jail for.
+-   Identify the types of variables in your research question. Categorical? Quantitative?
+    -   Categorical
+
+        -   Race
+
+        -   Sex
+
+        -   State
+
+        -   Description
+
+        -   Country
+
+        -   DNA being found
+
+    -   Quantitative
+
+        -   Year Convicted
+
+        -   Year Exonerated
+
+        -   Age
+
+## Glimpse of data
+
+```{r}
+#| label: load-data-3
+
+# add code here
+us_exonerations <- 
+  read_csv("data/us_exonerations.csv")
+
+skimr::skim(us_exonerations)
+```
